@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sprintf/sprintf.dart';
 
 enum TimerStatus { running, paused, stopped, resting }
 
@@ -12,8 +13,8 @@ class TimerScreen extends StatefulWidget {
 }
 
 class _TimerScreenState extends State<TimerScreen> {
-  static const workSeconds = 25;
-  static const restSeconds = 5;
+  static const workSeconds = 25 * 60;
+  static const restSeconds = 5 * 60;
 
   late TimerStatus _timerStatus;
   late int _timer;
@@ -25,6 +26,10 @@ class _TimerScreenState extends State<TimerScreen> {
     _timerStatus = TimerStatus.stopped;
     _timer = workSeconds;
     _pomodoroCount = 0;
+  }
+
+  String secondsToString(int seconds) {
+    return sprintf("%02d:%02d", [seconds ~/ 60, seconds % 60]);
   }
 
   void runTimer() async {
@@ -65,7 +70,7 @@ class _TimerScreenState extends State<TimerScreen> {
   void run() {
     setState(() {
       _timerStatus = TimerStatus.running;
-      print("[=>]" + _timerStatus.toString());
+      print("[=>]$_timerStatus");
       runTimer();
     });
   }
@@ -74,11 +79,11 @@ class _TimerScreenState extends State<TimerScreen> {
     setState(() {
       _timer = restSeconds;
       _timerStatus = TimerStatus.resting;
-      print("[=>]" + _timerStatus.toString());
+      print("[=>]$_timerStatus");
     });
   }
 
-  void paused() {
+  void pause() {
     setState(() {
       _timerStatus = TimerStatus.paused;
     });
@@ -92,7 +97,7 @@ class _TimerScreenState extends State<TimerScreen> {
     setState(() {
       _timer = workSeconds;
       _timerStatus = TimerStatus.stopped;
-      print("[=>]" + _timerStatus.toString());
+      print("[=>]$_timerStatus");
     });
   }
 
@@ -100,26 +105,32 @@ class _TimerScreenState extends State<TimerScreen> {
   Widget build(BuildContext context) {
     final List<Widget> _runningButtons = [
       ElevatedButton(
-        onPressed: () {},
-        child: const Text(
-          1 == 2 ? '계속하기' : '일시정지',
-          style: TextStyle(color: Colors.white, fontSize: 16),
+        onPressed: _timerStatus == TimerStatus.paused ? resume : pause,
+        style: ElevatedButton.styleFrom(
+          backgroundColor:
+              _timerStatus == TimerStatus.paused ? Colors.green : Colors.grey,
+        ),
+        child: Text(
+          _timerStatus == TimerStatus.paused ? '계속하기' : '일시정지',
+          style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
       ),
       const Padding(padding: EdgeInsets.all(20)),
       ElevatedButton(
-        onPressed: () {},
+        onPressed: stop,
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
         child: const Text(
           '포기하기',
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(color: Colors.white, fontSize: 16),
         ),
       ),
     ];
     final List<Widget> _stoppedButtons = [
       ElevatedButton(
-        onPressed: () {},
+        onPressed: run,
         style: ElevatedButton.styleFrom(
-          foregroundColor: 1 == 2 ? Colors.green : Colors.blue,
+          backgroundColor:
+              _timerStatus == TimerStatus.resting ? Colors.green : Colors.blue,
         ),
         child: const Text(
           '시작하기',
@@ -137,14 +148,16 @@ class _TimerScreenState extends State<TimerScreen> {
           Container(
             height: MediaQuery.of(context).size.height * 0.5,
             width: MediaQuery.of(context).size.width * 0.5,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: 1 == 2 ? Colors.green : Colors.blue,
+              color: _timerStatus == TimerStatus.resting
+                  ? Colors.green
+                  : Colors.blue,
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                '00:00',
-                style: TextStyle(
+                secondsToString(_timer),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
@@ -154,9 +167,9 @@ class _TimerScreenState extends State<TimerScreen> {
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: 1 == 2
-                ? const []
-                : 1 == 2
+            children: _timerStatus == TimerStatus.resting
+                ? const [Padding(padding: EdgeInsets.all(20))]
+                : _timerStatus == TimerStatus.stopped
                     ? _stoppedButtons
                     : _runningButtons,
           )
