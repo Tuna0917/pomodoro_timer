@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:sprintf/sprintf.dart';
+import 'package:pomodoro_timer/utils/utils.dart';
 
 enum TimerStatus { running, paused, stopped, resting }
 
@@ -13,8 +13,8 @@ class TimerScreen extends StatefulWidget {
 }
 
 class _TimerScreenState extends State<TimerScreen> {
-  static const workSeconds = 25 * 60;
-  static const restSeconds = 5 * 60;
+  static const workSeconds = 10;
+  static const restSeconds = 5;
 
   late TimerStatus _timerStatus;
   late int _timer;
@@ -28,10 +28,6 @@ class _TimerScreenState extends State<TimerScreen> {
     _pomodoroCount = 0;
   }
 
-  String secondsToString(int seconds) {
-    return sprintf("%02d:%02d", [seconds ~/ 60, seconds % 60]);
-  }
-
   void runTimer() async {
     Timer.periodic(const Duration(seconds: 1), (Timer t) {
       switch (_timerStatus) {
@@ -41,6 +37,7 @@ class _TimerScreenState extends State<TimerScreen> {
           break;
         case TimerStatus.running:
           if (_timer <= 0) {
+            showToast("휴식 시간!");
             rest();
           } else {
             setState(() {
@@ -53,6 +50,7 @@ class _TimerScreenState extends State<TimerScreen> {
             setState(() {
               _pomodoroCount += 1;
             });
+            showToast("오늘 $_pomodoroCount개의 뽀모도로를 달성했습니다");
             t.cancel();
             stop();
           } else {

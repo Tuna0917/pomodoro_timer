@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   sprintf: ^6.0.0
+  fluttertoast: ^8.0.7
 
 dev_dependencies:
   flutter_test:
