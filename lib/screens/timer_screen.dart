@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+enum TimerStatus { running, paused, stopped, resting }
 
 class TimerScreen extends StatefulWidget {
   const TimerScreen({super.key});
@@ -8,6 +12,90 @@ class TimerScreen extends StatefulWidget {
 }
 
 class _TimerScreenState extends State<TimerScreen> {
+  static const workSeconds = 25;
+  static const restSeconds = 5;
+
+  late TimerStatus _timerStatus;
+  late int _timer;
+  late int _pomodoroCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _timerStatus = TimerStatus.stopped;
+    _timer = workSeconds;
+    _pomodoroCount = 0;
+  }
+
+  void runTimer() async {
+    Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      switch (_timerStatus) {
+        case TimerStatus.paused:
+        case TimerStatus.stopped:
+          t.cancel();
+          break;
+        case TimerStatus.running:
+          if (_timer <= 0) {
+            rest();
+          } else {
+            setState(() {
+              _timer -= 1;
+            });
+          }
+          break;
+        case TimerStatus.resting:
+          if (_timer <= 0) {
+            setState(() {
+              _pomodoroCount += 1;
+            });
+            t.cancel();
+            stop();
+          } else {
+            setState(() {
+              _timer -= 1;
+            });
+          }
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  void run() {
+    setState(() {
+      _timerStatus = TimerStatus.running;
+      print("[=>]" + _timerStatus.toString());
+      runTimer();
+    });
+  }
+
+  void rest() {
+    setState(() {
+      _timer = restSeconds;
+      _timerStatus = TimerStatus.resting;
+      print("[=>]" + _timerStatus.toString());
+    });
+  }
+
+  void paused() {
+    setState(() {
+      _timerStatus = TimerStatus.paused;
+    });
+  }
+
+  void resume() {
+    run();
+  }
+
+  void stop() {
+    setState(() {
+      _timer = workSeconds;
+      _timerStatus = TimerStatus.stopped;
+      print("[=>]" + _timerStatus.toString());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> _runningButtons = [
